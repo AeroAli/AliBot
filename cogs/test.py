@@ -9,8 +9,8 @@ class Test(commands.Cog):
 
     @commands.hybrid_command()
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def hello(self, ctx):
-        await ctx.reply(f"Hello {ctx.author.mention}")
+    async def test(self, ctx):
+        await ctx.reply(f"{ctx.author.mention} is the coolest")
 
 
 async def setup(client):

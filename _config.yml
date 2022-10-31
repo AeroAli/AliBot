@@ -1,0 +1,6 @@
+remote_theme: pages-themes/hacker
+plugins:
+- jekyll-remote-theme
+
+title: AliBot
+description: Basic Discord bot

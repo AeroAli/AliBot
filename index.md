@@ -12,7 +12,7 @@ Basic Discord bot written in Python using discord.py
 - BasicBot
   - Add numbers
   - Rolls dice in NdN format.
-  - Chooses between multiple choices (split at " ")
+  - Chooses between multiple choices (split at ",")
   - poke user
   - greet command user
 - Test 

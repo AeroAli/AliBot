@@ -25,7 +25,7 @@ class Basic(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def choose(self, ctx, choice_in: str):
         """Chooses between multiple choices."""
-        choices = choice_in.split(" ")
+        choices = choice_in.split(",")
         await ctx.reply(random.choice(choices))
 
     @commands.hybrid_command()

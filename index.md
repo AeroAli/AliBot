@@ -4,4 +4,11 @@ Basic Discord bot written in Python using discord.py
 
 ## Features
 
-- add them
+- HugBot
+  - ???
+- StarBot
+  - gets quotes and GIFs from files
+- Basic
+  - ???
+- Test 
+  - ???

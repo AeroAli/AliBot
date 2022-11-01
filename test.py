@@ -1,8 +1,6 @@
-# test.py
-
 import random
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, abspath, dirname
 
 # gif = random.choice([x for x in open(
 #     f"starkids/{random.choice([y for y in listdir('starkids') if isfile(join('starkids', y) and 'gifs' in y)])}"
@@ -41,12 +39,13 @@ from os.path import isfile, join
 
 gifs = []
 quotes = []
-for file in listdir("starkids"):
-    if isfile(join("starkids", file)):
+dir = f"{abspath(dirname(__file__))}/starkids"
+for file in listdir(dir):
+    if isfile(join(dir, file)):
         if "gif" in file:
-            gifs.append(join("starkids", file))
+            gifs.append(join(dir, file))
         if "quote" in file:
-            quotes.append(join("starkids", file))
+            quotes.append(join(dir, file))
 
 with open(random.choice(gifs), "r") as f:
     gif = f.read().splitlines()
@@ -56,4 +55,3 @@ with open(random.choice(quotes), "r") as f:
 
 print(random.choice(gif))
 print(random.choice(quote))
-

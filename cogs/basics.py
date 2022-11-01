@@ -1,7 +1,9 @@
 # cogs / basics.py
+
 import random
 
 import discord
+from discord import Embed
 from discord.ext import commands
 
 
@@ -37,8 +39,9 @@ class Basic(commands.Cog):
     @commands.hybrid_command()
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def poke(self, ctx, user: discord.User):
-        await ctx.reply(f"poke <@{user.id}>")
-        await ctx.reply(content="https://media.tenor.com/w_Nc85-LDWEAAAAj/giggle-hee.gif")
+        embed_var = Embed(title=f"poke <@{user.id}>")
+        embed_var.set_image(url="https://media.tenor.com/w_Nc85-LDWEAAAAj/giggle-hee.gif")
+        await ctx.reply(embed=embed_var)
 
     @commands.hybrid_command()
     @commands.cooldown(1, 10, commands.BucketType.user)

@@ -12,32 +12,25 @@ class Hug(commands.Cog):
 
     # Hug
     @commands.hybrid_command()
-    @commands.cooldown(1, 10, commands.BucketType.user)
+    # @commands.cooldown(1, 10, commands.BucketType.user)
     async def hug(self, ctx, user: discord.User):
-        hug_choice = random.choice(open("hugs").read().splitlines())
-
-        # random.choices()
-
-        message = [f"{ctx.author.name} hugs <@{user.id}>",  # author hugs @user
-                   f"{ctx.author.name} hugs {user.name}",  # author hugs user
-                   f"{ctx.author.id} hugs <@{user.name}>",  # @author hugs user
-                   f"{ctx.author.id} hugs <@{user.id}>"]  # @author hugs @user
-
-        embed_var = Embed(title=random.choice(message))
+        hug_choice = random.choice(open("gifs/hugs").read().splitlines())
+        message = [f"{ctx.author.display_name} hugs <@{user.id}>",  # author hugs @user
+                   f"{ctx.author.display_name} hugs {user.display_name}"]  # author hugs user
+        print(hug_choice)
+        embed_var = Embed(title="HUGS",description=random.choice(message))
         embed_var.set_image(url=hug_choice)
 
         await ctx.reply(embed=embed_var)
 
     # Tackle
     @commands.hybrid_command()
-    @commands.cooldown(1, 10, commands.BucketType.user)
+    # @commands.cooldown(1, 10, commands.BucketType.user)
     async def tackle(self, ctx, user: discord.User):
-        hug_choice = random.choice(open("tackles").read().splitlines())
-        message = [f"{ctx.author.name} hugs <@{user.id}>",  # author hugs @user
-                   f"{ctx.author.name} hugs {user.name}",  # author hugs user
-                   f"{ctx.author.id} hugs <@{user.name}>",  # @author hugs user
-                   f"{ctx.author.id} hugs <@{user.id}>"]  # @author hugs @user
-        embed_var = Embed(title=random.choice(message))
+        hug_choice = random.choice(open("gifs/tackles").read().splitlines())
+        message = [f"{ctx.author.display_name} tackles <@{user.id}>",  # author hugs @user3
+                   f"{ctx.author.display_name} tackles {user.display_name}"]  # author hugs user
+        embed_var = Embed(title="TACKLE TIME", description=random.choice(message))
         embed_var.set_image(url=hug_choice)
 
         await ctx.reply(embed=embed_var)
@@ -49,10 +42,40 @@ class Hug(commands.Cog):
             emoji = self.client.get_emoji(1036757258006167703)
             await message.add_reaction(emoji)
 
-    # hug
-    # tackle
-    # scritches
-    # squish
+     
+    @commands.hybrid_command()
+    # @commands.cooldown(1, 10, commands.BucketType.user)
+    async def scritches(self, ctx, user: discord.User):
+        hug_choice = random.choice(open("gifs/scritches").read().splitlines())
+        message = [f"{ctx.author.display_name} scritches <@{user.id}>",  # author hugs @user3
+                   f"{ctx.author.display_name} scritches {user.display_name}"]  # author hugs user
+        embed_var = Embed(title="SCRITCHES", description=random.choice(message))
+        embed_var.set_image(url=hug_choice)
+
+        await ctx.reply(embed=embed_var)
+
+    @commands.hybrid_command()
+    # @commands.cooldown(1, 10, commands.BucketType.user)
+    async def squish(self, ctx, user: discord.User):
+        hug_choice = random.choice(open("gifs/squishes").read().splitlines())
+        message = [f"{ctx.author.display_name} squishes <@{user.id}>",  # author hugs @user3
+                   f"{ctx.author.display_name} squishes {user.display_name}"]  # author hugs user
+        embed_var = Embed(title="SQUISH", description=random.choice(message))
+        embed_var.set_image(url=hug_choice)
+        
+        await ctx.reply(embed=embed_var)
+ 
+    @commands.hybrid_command()
+    # @commands.cooldown(1, 10, commands.BucketType.user)
+    async def fav(self, ctx, user: discord.User):
+        hug_choice = random.choice(open("gifs/squishes").read().splitlines())
+        message = [f"{ctx.author.display_name} attacks (affectionate) <@{user.id}>",  # author hugs @user3
+                   f"{ctx.author.display_name} attacks (affectionate) {user.display_name}"]  # author hugs user
+        embed_var = Embed(title="HUG!!!!!!", description=random.choice(message))
+        embed_var.set_image(url=hug_choice)
+        
+        await ctx.reply(embed=embed_var)
+ 
     # eldritch
     # flirt
     # Pat

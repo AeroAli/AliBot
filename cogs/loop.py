@@ -6,6 +6,7 @@ import os
 from os import listdir
 from os.path import join
 import json
+import csv
 
 
 class Loop(commands.Cog):
@@ -19,7 +20,7 @@ class Loop(commands.Cog):
             await ctx.reply("Loop Start")
             # for file in listdir("starkids"):
             # for file in listdir("gifs"):
-            file = "gifs/hugs"
+            file = "gifs/hug"
             await ctx.reply(f"file: {file.split('.')[0]}")
             # file = join("gifs", file)
             for line in open(f"{file}").read().splitlines():
@@ -35,6 +36,51 @@ class Loop(commands.Cog):
                         print("er",line)
                         print(e)
                         await ctx.reply("Source Not Available")
+    
+    @commands.hybrid_command()
+    #@commands.cooldown(1, 10, commands.BucketType.user)
+    async def loop_c(self, ctx):
+        if ctx.author.id == 689522335119966258 and ctx.guild.id == 1039953198359781446:
+            await ctx.reply("Loop Start")
+            # for file in listdir("starkids"):
+            # for file in listdir("gifs"):
+            file = "gifs/hug_cog.csv"
+            await ctx.reply(f"file: {file.split('.')[0]}")
+            # file = join("gifs", file)
+            with open(file, "r") as f:
+                lines = csv.reader(f, delimiter=",")
+                for line in lines:
+                    # line in open(f"{file}").read().splitlines():
+                    if line != "":
+                        try:
+                            # await ctx.reply(str(file).split("/")[-1].split(".")[0])
+                            embed_var = Embed(title=f"gif {line[0]}")
+                            embed_var.set_image(url=line[2])
+                            await ctx.reply(embed=embed_var)
+                            time.sleep(0.1)
+                        except Exception as e:
+                            print("er",line)
+                            print(e)
+                            await ctx.reply("Source Not Available")
+    
+    @commands.hybrid_command()
+    async def f_loop(self, ctx):
+        try:
+            if ctx.author.id == 689522335119966258 and ctx.guild.id == 1039953198359781446:
+                await ctx.reply("Loop Start")
+                with open("test/hugbox.csv","r") as file:
+                    csvFile = csv.DictReader(file, delimiter=",")
+                    for row in csvFile:
+                        try:
+                            embed_var=Embed(title=row["category_name"], description=row["id"])
+                            embed_var.set_image(url=row["image_url"])
+                            time.sleep(0.1)
+                            await ctx.send(embed=embed_var)
+                        except Exception as e:
+                            print(row["id"])
+                            print(e)
+        except Exception as E:
+            print(E)
 
 
     
@@ -74,7 +120,7 @@ class Loop(commands.Cog):
                                 embed_var.set_image(url=gif)
                             else:
                                 continue
-                            time.sleep(0.5)
+                            time.sleep(1)
                             await ctx.reply(embed=embed_var)
                         except Exception as e:
                             print(e)

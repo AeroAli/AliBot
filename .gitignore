@@ -1,0 +1,6 @@
+# Ali
+*.pyc
+cogs/exp*.py
+test_json/*
+/mp4s/*
+.env

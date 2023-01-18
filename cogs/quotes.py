@@ -7,12 +7,14 @@ from discord.ext import commands
 
 
 class Quote(commands.Cog):
+    """quote commands"""
     def __init__(self, client):
         self.client = client
 
     @commands.hybrid_command()
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def quote(self, ctx, source: str):
+        """outputs quotes from file"""
         try:
             if source != "random":
                 lines = open(f"quotes/{source}").read().splitlines()

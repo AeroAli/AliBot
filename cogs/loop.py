@@ -1,21 +1,21 @@
 # cogs / loop.py
-import time
-from discord.ext import commands
-from discord import Embed
-import os
-from os import listdir
-from os.path import join
-import json
 import csv
+import json
+import time
+
+from discord import Embed
+from discord.ext import commands
 
 
 class Loop(commands.Cog):
+    """Looping commands"""
     def __init__(self, client):
         self.client = client
 
     @commands.hybrid_command()
     #@commands.cooldown(1, 10, commands.BucketType.user)
     async def loop(self, ctx):
+        """Loops through file"""
         if ctx.author.id == 689522335119966258 and ctx.guild.id == 1039953198359781446:
             await ctx.reply("Loop Start")
             # for file in listdir("starkids"):
@@ -40,6 +40,7 @@ class Loop(commands.Cog):
     @commands.hybrid_command()
     #@commands.cooldown(1, 10, commands.BucketType.user)
     async def loop_c(self, ctx):
+        """Loops through file"""
         if ctx.author.id == 689522335119966258 and ctx.guild.id == 1039953198359781446:
             await ctx.reply("Loop Start")
             # for file in listdir("starkids"):
@@ -65,6 +66,7 @@ class Loop(commands.Cog):
     
     @commands.hybrid_command()
     async def f_loop(self, ctx):
+        """Loops through file"""
         try:
             if ctx.author.id == 689522335119966258 and ctx.guild.id == 1039953198359781446:
                 await ctx.reply("Loop Start")
@@ -87,6 +89,7 @@ class Loop(commands.Cog):
     @commands.hybrid_command()
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def loop_j(self, ctx, show: str):
+        """Loops through file"""
         try:
             show = show.lower()
             show = show.strip()

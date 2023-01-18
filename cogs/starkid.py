@@ -2,13 +2,14 @@
 import json
 import random
 from os import listdir
-from os.path import isfile, join, abspath, dirname
+from os.path import isfile, join
 
 from discord import Embed
 from discord.ext import commands
 
 
 class Starkid(commands.Cog):
+    """starkid commands"""
     def __init__(self, client):
         self.client = client
 
@@ -18,11 +19,7 @@ class Starkid(commands.Cog):
     @commands.hybrid_command()
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def star_quote(self, ctx, show: str):
-        
-        """
-            random quote from the following musicals: 
-                tgwdlm, twisted, starship, black_friday, hatchetfield, hmb, firebringer, avpm, ani
-        """
+        """random quote (and gif) from a starkid show - use /list to view the supported shows"""
         try:
             show = show.lower()
             show = show.strip()
@@ -77,10 +74,7 @@ class Starkid(commands.Cog):
     @commands.hybrid_command()
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def star_gif(self, ctx, show: str):
-        """
-            random quote from the following musicals: 
-                tgwdlm, twisted, starship, black_friday, hatchetfield, hmb, firebringer, avpm, ani
-        """
+        """random gif and quote from a starkid show - use /list to view the supported shows"""
         try:
             show = show.lower()
             show = show.strip()
@@ -138,10 +132,7 @@ class Starkid(commands.Cog):
     @commands.hybrid_command()
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def star_random(self, ctx):
-        """
-            random gif from the following musicals: 
-                tgwdlm, twisted, starship, black_friday, hatchetfield, hmb, firebringer, avpm, ani
-        """
+        """random gif and/or quote from a starkid show - use /list to view the supported shows"""
         try:
             print("under try")
             file = random.choice([y for y in listdir('starkids') if isfile(join('starkids', y))])
@@ -174,11 +165,10 @@ class Starkid(commands.Cog):
     @commands.hybrid_command()
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def star_thanos(self, ctx):
-        """
-            blame thanos
-        """
-        if ctx.author.id in self.ali_approved and ctx.guild.id != 801834790768082944:
+        """blame thanos - basically star_random but sometimes blames him"""
+        if ctx.author.id in self.ali_approved:# and ctx.guild.id != 801834790768082944:
             try:
+                print("try")
                 file = random.choice([y for y in listdir('starkids') if isfile(join('starkids', y)) and "thanos" in y])
                 print(file)
                 with open(f"starkids/{file}", "r") as f:
@@ -207,7 +197,6 @@ class Starkid(commands.Cog):
                         embed_var.set_author(name=author, icon_url=author.avatar.url)
                     except Exception as e:
                         print(e)
-                        author = "​"
                     await ctx.reply(embed=embed_var)
                     print(gif, quote)
             except Exception as e:
@@ -217,6 +206,7 @@ class Starkid(commands.Cog):
     @commands.hybrid_command()
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def disapproval(self, ctx):
+        """When you need to express your disapproval"""
         gif = "https://media.tenor.com/mUNcGoiwOLcAAAAM/brian-holden-starkid.gif"
         quote = "Brian does not approve"
         
@@ -224,6 +214,29 @@ class Starkid(commands.Cog):
         embed_var.set_image(url=gif)
         
         await ctx.reply(embed=embed_var)
+
+    @commands.hybrid_command()
+    async def list(self, ctx):
+        """Lists shows"""
+        command_description = "\n\n***Input is case-insensitive***\n\n" \
+                              "A Very Potter Musical Trilogy - `avpm`\n" \
+                              "Starship - `starship`\n" \
+                              "Holy Musical B@man! - `hmb`\n" \
+                              "Twisted: The Untold Story of a Royal Vizier - `twisted`\n" \
+                              "The Trail To Oregon! - `oregon`\n" \
+                              "Ani: A Parody - `ani`\n" \
+                              "Firebringer - `firebringer`\n" \
+                              "Assorted Hatchetfield - `hatchetfield`\n" \
+                              "The Guy Who Doesn't Like Musicals - `tgwdlm`\n" \
+                              "Black Friday - `black friday`"
+
+        embed_var = Embed(
+            color=0x1A2B3C,
+            title="__Show - `command input`__",
+            description=command_description
+        )
+        await ctx.reply(embed=embed_var)
+
 
 async def setup(client):
     await client.add_cog(Starkid(client))

@@ -1,26 +1,25 @@
 # cogs / moderation.py
-import random
 
-import discord
+import time
+
 from discord import Embed
 from discord.ext import commands
-import time
 
 
 class Moderation(commands.Cog):
+    """Moderation commands"""
     def __init__(self, client):
         self.client = client
 
-    mod_channels = {"917901239306575902":1038967126091890719,"1039953198359781446":1040383695468634212}
+    mod_channels = {917901239306575902:1038967126091890719,1039953198359781446:1040383695468634212}
     servers = [917901239306575902,1039953198359781446]
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        """Delete Message containing string"""
         if message.guild.id in self.servers:
             mod_channels = self.mod_channels
-            mod_channel = mod_channels[f"{message.guild.id}"]
-    
-    
+            mod_channel = mod_channels[message.guild.id]
             if "||​||||​||" * 20 in message.content.lower():
                 time.sleep(1)
                 await message.delete()

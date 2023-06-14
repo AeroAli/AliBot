@@ -11,23 +11,12 @@ class Template(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    global_gif_dict = {}
-    with open("gifs/hug_cog.csv", "r") as f:
-        csv_rows = csv.reader(f, delimiter=",")
-        rows = list(csv_rows)
-        for row in rows:
-            key = str(row[1])
-            if key in global_gif_dict:
-                global_gif_dict[key].append(row)
-            else:
-                global_gif_dict[key] = [row]
-
     @commands.hybrid_command()
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def example(self, ctx):
         """example command and embed"""
         embed_var = Embed(title="​")
-        chosen = random.choice(self.global_gif_dict["wave"])
+        chosen = await self.get_hugged("wave")
         hug_choice = chosen[2]
         embed_var.set_image(url=hug_choice)
         await ctx.reply(f"Hello {ctx.author.mention}", embed=embed_var)

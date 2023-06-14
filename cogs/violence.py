@@ -14,16 +14,18 @@ class Violence(commands.Cog):
 
     imprisoned = [959480822988161095]
 
-    global_gif_dict = {}
-    with open("gifs/hug_cog.csv", "r") as f:
-        csv_rows = csv.reader(f, delimiter=",")
-        rows = list(csv_rows)
-        for row in rows:
-            key = str(row[1])
-            if key in global_gif_dict:
-                global_gif_dict[key].append(row)
-            else:
-                global_gif_dict[key] = [row]
+    hugging_table = "hug_cog"
+
+
+    async def get_hugged(self, action):
+        async with self.client.db_pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(f"SELECT * FROM `{self.hugging_table}` where category_name='{action}' ORDER BY RAND() LIMIT 1")
+                # print(cur.description)
+                result = await cur.fetchone()
+                return result
+
+
 
     # Baka
     @commands.hybrid_command()
@@ -35,7 +37,7 @@ class Violence(commands.Cog):
             embed_var.set_image(url="https://media.tenor.com/e_9c6yedKCQAAAAd/cat-kitten.gif")
             await ctx.reply(embed=embed_var)
         else:
-            chosen = random.choice(self.global_gif_dict["baka"])
+            chosen = await self.get_hugged("baka")
             hug_choice = chosen[2]
             message = [f"{ctx.author.display_name} condemns <@{user.id}> for extreme dumbfuckery",  # author hugs @user
                        f"{ctx.author.display_name} condemns {user.display_name} for extreme dumbfuckery"]  # author hugs user
@@ -55,7 +57,7 @@ class Violence(commands.Cog):
             embed_var.set_image(url="https://media.tenor.com/e_9c6yedKCQAAAAd/cat-kitten.gif")
             await ctx.reply(embed=embed_var)
         else:
-            chosen = random.choice(self.global_gif_dict["kick"])
+            chosen = await self.get_hugged("kick")
             hug_choice = chosen[2]
             message = [f"{ctx.author.display_name} kicks <@{user.id}>",  # author hugs @user
                        f"{ctx.author.display_name} kicks {user.display_name}"]  # author hugs user
@@ -75,7 +77,7 @@ class Violence(commands.Cog):
             embed_var.set_image(url="https://media.tenor.com/e_9c6yedKCQAAAAd/cat-kitten.gif")
             await ctx.reply(embed=embed_var)
         else:
-            chosen = random.choice(self.global_gif_dict["tazer"])
+            chosen = await self.get_hugged("tazer")
             hug_choice = chosen[2]
             message = [f"{ctx.author.display_name} tazes <@{user.id}>",  # author hugs @user
                        f"{ctx.author.display_name} tazes {user.display_name}"]  # author hugs user
@@ -95,7 +97,7 @@ class Violence(commands.Cog):
             embed_var.set_image(url="https://media.tenor.com/e_9c6yedKCQAAAAd/cat-kitten.gif")
             await ctx.reply(embed=embed_var)
         else:
-            chosen = random.choice(self.global_gif_dict["nohorny"])
+            chosen = await self.get_hugged("nohorny")
             hug_choice = chosen[2]
             message = [f"{ctx.author.display_name} bonks <@{user.id}>",  # author hugs @user
                        f"{ctx.author.display_name} bonks {user.display_name}"]  # author hugs user
@@ -115,7 +117,7 @@ class Violence(commands.Cog):
             embed_var.set_image(url="https://media.tenor.com/e_9c6yedKCQAAAAd/cat-kitten.gif")
             await ctx.reply(embed=embed_var)
         else:
-            chosen = random.choice(self.global_gif_dict["punch"])
+            chosen = await self.get_hugged("punch")
             hug_choice = chosen[2]
             message = [f"{ctx.author.display_name} punches <@{user.id}>",  # author hugs @user
                        f"{ctx.author.display_name} punches {user.display_name}"]  # author hugs user
@@ -135,7 +137,7 @@ class Violence(commands.Cog):
             embed_var.set_image(url="https://media.tenor.com/e_9c6yedKCQAAAAd/cat-kitten.gif")
             await ctx.reply(embed=embed_var)
         else:
-            chosen = random.choice(self.global_gif_dict["slap"])
+            chosen = await self.get_hugged("slap")
             hug_choice = chosen[2]
             message = [f"{ctx.author.display_name} slaps <@{user.id}>",  # author hugs @user3
                        f"{ctx.author.display_name} slaps {user.display_name}"]  # author hugs user
@@ -155,7 +157,7 @@ class Violence(commands.Cog):
             embed_var.set_image(url="https://media.tenor.com/e_9c6yedKCQAAAAd/cat-kitten.gif")
             await ctx.reply(embed=embed_var)
         else:
-            chosen = random.choice(self.global_gif_dict["nom"])
+            chosen = await self.get_hugged("nom")
             hug_choice = chosen[2]
             message = [f"{ctx.author.display_name} noms <@{user.id}>",  # author hugs @user3
                        f"{ctx.author.display_name} noms {user.display_name}"]  # author hugs user
@@ -175,7 +177,7 @@ class Violence(commands.Cog):
             embed_var.set_image(url="https://media.tenor.com/e_9c6yedKCQAAAAd/cat-kitten.gif")
             await ctx.reply(embed=embed_var)
         else:
-            chosen = random.choice(self.global_gif_dict["kill"])
+            chosen = await self.get_hugged("kill")
             hug_choice = chosen[2]
             message = [f"{ctx.author.display_name} kills <@{user.id}>",  # author hugs @user3
                        f"{ctx.author.display_name} kills {user.display_name}"]  # author hugs user
@@ -214,7 +216,7 @@ class Violence(commands.Cog):
             embed_var.set_image(url="https://media.tenor.com/e_9c6yedKCQAAAAd/cat-kitten.gif")
             await ctx.reply(embed=embed_var)
         else:
-            chosen = random.choice(self.global_gif_dict["headbutt"])
+            chosen = await self.get_hugged("headbutt")
             hug_choice = chosen[2]
             message = [f"{ctx.author.display_name} headbutts <@{user.id}>",  # author hugs @user3
                        f"{ctx.author.display_name} headbutts {user.display_name}"]  # author hugs user

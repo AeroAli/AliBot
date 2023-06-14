@@ -4,3 +4,5 @@ cogs/exp*.py
 test_json/*
 /mp4s/*
 .env
+
+docs/.obsidian/

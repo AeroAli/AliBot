@@ -13,17 +13,16 @@ class Vibe(commands.Cog):
     def __init__(self, client):
         self.client = client
 
+    hugging_table = "hug_cog"
 
-    global_gif_dict = {}
-    with open("gifs/hug_cog.csv", "r") as f:
-        csv_rows = csv.reader(f, delimiter=",")
-        rows = list(csv_rows)
-        for row in rows:
-            key = str(row[1])
-            if key in global_gif_dict:
-                global_gif_dict[key].append(row)
-            else:
-                global_gif_dict[key] = [row]
+
+    async def get_hugged(self, action):
+        async with self.client.db_pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(f"SELECT * FROM `{self.hugging_table}` where category_name='{action}' ORDER BY RAND() LIMIT 1")
+                # print(cur.description)
+                result = await cur.fetchone()
+                return result
 
     # Bahaj
     @commands.hybrid_command()
@@ -33,7 +32,7 @@ class Vibe(commands.Cog):
                    "Blahaj",
                    "Blahaj, my beloved"]
         embed_var = Embed(title="BLAHAJ", description=random.choice(message))
-        chosen = random.choice(self.global_gif_dict["shark"])
+        chosen = await self.get_hugged("shark")
         rhea_choice = chosen[2]
         print(rhea_choice)
         embed_var.set_image(url=rhea_choice)
@@ -49,7 +48,7 @@ class Vibe(commands.Cog):
         message = ["is it dodie yellow tho",
                    "Dodie <3"]
 
-        chosen = random.choice(self.global_gif_dict["dodie"])
+        chosen = await self.get_hugged("dodie")
         rhea_choice = chosen[2]
         print(rhea_choice)
         embed_var = Embed(title="DODIE CLARKE!!!!!", description=random.choice(message))

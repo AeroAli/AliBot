@@ -12,16 +12,19 @@ class Affection(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    global_gif_dict = {}
-    with open("gifs/hug_cog.csv", "r") as f:
-        csv_rows = csv.reader(f, delimiter=",")
-        rows = list(csv_rows)
-        for row in rows:
-            key = str(row[1])
-            if key in global_gif_dict:
-                global_gif_dict[key].append(row)
-            else:
-                global_gif_dict[key] = [row]
+    hugging_table = "hug_cog"
+
+    async def cog_command_error(self, ctx, error: Exception) -> None:
+        print(error)
+    async def get_hugged(self, action):
+        async with self.client.db_pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    f"SELECT * FROM `{self.hugging_table}` where category_name='{action}' ORDER BY RAND() LIMIT 1")
+                # print(cur.description)
+                result = await cur.fetchone()
+                print(result)
+                return result
 
 
     # Boop
@@ -29,7 +32,7 @@ class Affection(commands.Cog):
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def boop(self, ctx, user: discord.User):
         """boop @user"""
-        chosen = random.choice(self.global_gif_dict["boop"])
+        chosen = await self.get_hugged("boop")
         hug_choice = chosen[2]
         message = [f"{ctx.author.display_name} boops <@{user.id}>",  # author hugs @user
                    f"{ctx.author.display_name} boops {user.display_name}"]  # author hugs user
@@ -44,7 +47,7 @@ class Affection(commands.Cog):
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def cuddle(self, ctx, user: discord.User):
         """cuddle @user"""
-        chosen = random.choice(self.global_gif_dict["cuddle"])
+        chosen = await self.get_hugged("cuddle")
         hug_choice = chosen[2]
         message = [f"{ctx.author.display_name} cuddles <@{user.id}>",  # author hugs @user
                    f"{ctx.author.display_name} cuddles {user.display_name}"]  # author hugs user
@@ -59,7 +62,7 @@ class Affection(commands.Cog):
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def hug(self, ctx, user: discord.User):
         """hug @user"""
-        chosen = random.choice(self.global_gif_dict["hug"])
+        chosen = await self.get_hugged("hug")
         hug_choice = chosen[2]
         message = [f"{ctx.author.display_name} hugs <@{user.id}>",  # author hugs @user
                    f"{ctx.author.display_name} hugs {user.display_name}"]  # author hugs user
@@ -74,7 +77,7 @@ class Affection(commands.Cog):
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def tackle(self, ctx, user: discord.User):
         """tackle @user"""
-        chosen = random.choice(self.global_gif_dict["tackle"])
+        chosen = await self.get_hugged("tackle")
         hug_choice = chosen[2]
         message = [f"{ctx.author.display_name} tackles <@{user.id}>",  # author hugs @user3
                    f"{ctx.author.display_name} tackles {user.display_name}"]  # author hugs user
@@ -89,7 +92,7 @@ class Affection(commands.Cog):
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def scritches(self, ctx, user: discord.User):
         """scritch @user"""
-        chosen = random.choice(self.global_gif_dict["scritch"])
+        chosen = await self.get_hugged("scritch")
         hug_choice = chosen[2]
         message = [f"{ctx.author.display_name} scritches <@{user.id}>",  # author hugs @user3
                    f"{ctx.author.display_name} scritches {user.display_name}"]  # author hugs user
@@ -103,8 +106,8 @@ class Affection(commands.Cog):
     @commands.hybrid_command()
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def pat(self, ctx, user: discord.User):
-        """punch @user"""
-        chosen = random.choice(self.global_gif_dict["pat"])
+        """pat @user"""
+        chosen = await self.get_hugged("pat")
         hug_choice = chosen[2]
         message = [f"{ctx.author.display_name} pats <@{user.id}>",  # author hugs @user3
                    f"{ctx.author.display_name} pats {user.display_name}"]  # author hugs user
@@ -119,7 +122,7 @@ class Affection(commands.Cog):
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def squish(self, ctx, user: discord.User):
         """squish @user"""
-        chosen = random.choice(self.global_gif_dict["squish"])
+        chosen = await self.get_hugged("squish")
         hug_choice = chosen[2]
         message = [f"{ctx.author.display_name} squishes <@{user.id}>",  # author hugs @user3
                    f"{ctx.author.display_name} squishes {user.display_name}"]  # author hugs user
@@ -134,7 +137,7 @@ class Affection(commands.Cog):
     # @commands.cooldown(1, 10, commands.BucketType.user)
     async def glomp(self, ctx, user: discord.User):
         """glomps @user"""
-        chosen = random.choice(self.global_gif_dict["favs"])
+        chosen = await self.get_hugged("favs")
         hug_choice = chosen[2]
         message = [f"{ctx.author.display_name} attacks (affectionate) <@{user.id}>",  # author hugs @user3
                    f"{ctx.author.display_name} attacks (affectionate) {user.display_name}"]  # author hugs user

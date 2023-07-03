@@ -26,10 +26,9 @@ class Client(commands.Bot):
     ):
 
         super().__init__(
-            command_prefix=commands.when_mentioned_or("!"),
+            command_prefix=commands.when_mentioned_or("&"),
             intents=discord.Intents.all(),
             help_command=commands.DefaultHelpCommand(dm_help=True)
-
         )
         self.db_pool = db_pool
         self.web_client = web_client

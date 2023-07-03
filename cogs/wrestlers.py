@@ -10,19 +10,11 @@ class Wrestlers(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    global_gif_dict = {}
-    with open("gifs/wrestler_cog.csv", "r") as f:
-        csv_rows = csv.reader(f, delimiter=",")
-        rows = list(csv_rows)
-        for row in rows:
-            key = str(row[1])
-            if key in global_gif_dict:
-                global_gif_dict[key].append(row)
-            else:
-                global_gif_dict[key] = [row]
 
     wrestling_table = "wrestling_cog"
-    hugging_table = "hug_cog"
+
+    async def cog_command_error(self, ctx, error: Exception) -> None:
+        print(error)
 
     async def get_wrastler(self, wrastler):
         async with self.client.db_pool.acquire() as conn:

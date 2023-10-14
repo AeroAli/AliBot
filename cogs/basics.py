@@ -1,6 +1,7 @@
 # cogs / basics.py
 
 import random
+import traceback
 
 from discord.ext import commands
 
@@ -22,11 +23,12 @@ class Basic(commands.Cog):
         """Rolls dice in NdN format."""
         try:
             rolls, limit = map(int, dice.split('d'))
-        except Exception:
+        except Exception as e:
+            traceback.print_exception(e)
             await ctx.reply('Format has to be in NdN!')
             return
 
-        result = ', '.join(str(random.randint(1, limit)) for r in range(rolls))
+        result = ', '.join(str(random.randint(1, limit)) for _ in range(rolls))
         await ctx.reply(result)
 
     @commands.hybrid_command()
@@ -40,7 +42,7 @@ class Basic(commands.Cog):
                     print(modifier)
                     print(dice)
                 except Exception as e:
-                    print(e)
+                    traceback.print_exception(e)
                     modifier = int(dice.split("+")[1])
                     dice = dice.split("+")[0]
                     print(modifier)
@@ -51,13 +53,13 @@ class Basic(commands.Cog):
                 print(dice)
             rolls, limit = map(int, dice.split('d'))
             if type == "dis":
-                result = ', '.join(str(random.randint(1, limit) + modifier) for r in range(rolls))
+                result = ', '.join(str(random.randint(1, limit) + modifier) for _ in range(rolls))
             elif type == "sum":
                 result = modifier
                 for _ in range(rolls):
                     result += random.randint(1, limit)
             elif type == "both":
-                result1 = ', '.join(str(random.randint(1, limit) + modifier) for r in range(rolls))
+                result1 = ', '.join(str(random.randint(1, limit) + modifier) for _ in range(rolls))
                 nums = result1.split(", ")
                 sum = modifier
                 for num in nums:

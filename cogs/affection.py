@@ -1,6 +1,7 @@
 # cogs / affection.py
 import csv
 import random
+import traceback
 
 import discord
 from discord import Embed
@@ -13,9 +14,12 @@ class Affection(commands.Cog):
         self.client = client
 
     hugging_table = "hug_cog"
+    affection_list = ("boop","cuddle","hug","tackle","scritch","pat","squish","favs")
+
 
     async def cog_command_error(self, ctx, error: Exception) -> None:
-        print(error)
+        traceback.print_exception(error)
+
     async def get_hugged(self, action):
         async with self.client.db_pool.acquire() as conn:
             async with conn.cursor() as cur:
@@ -25,6 +29,15 @@ class Affection(commands.Cog):
                 result = await cur.fetchone()
                 print(result)
                 return result
+
+    async def action_count(self):
+        async with self.client.db_pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    f"SELECT category_name, COUNT(*) AS `num` FROM hug_cog WHERE category_name IN {self.affection_list} GROUP BY category_name ORDER BY category_name")
+                result = await cur.fetchall()
+                return result
+
 
 
     # Boop
@@ -157,13 +170,25 @@ class Affection(commands.Cog):
         embed_var.set_image(url="https://cdn.weeb.sh/images/rktSlkKvb.gif")
         await ctx.reply(f"<@!{user.id}>", embed=embed_var)
 
-    # Happy Bot
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        if "hugbot" in message.content.lower() and "love" in message.content.lower():
-            # https://cdn.discordapp.com/emojis/1036757258006167703.gif?size=96&quality=lossless
-            emoji = self.client.get_emoji(1036757258006167703)
-            await message.add_reaction(emoji)
+    # # Happy Bot
+    # @commands.Cog.listener()
+    # async def on_message(self, message):
+    #     if "hugbot" in message.content.lower() and "love" in message.content.lower():
+    #         # https://cdn.discordapp.com/emojis/1036757258006167703.gif?size=96&quality=lossless
+    #         emoji = self.client.get_emoji(1036757258006167703)
+    #         await message.add_reaction(emoji)
+
+
+    @commands.hybrid_command()
+    async def affection_gifs(self, ctx):
+        """get all gifs used in this cog"""
+        actions = await self.action_count()
+        des = "\n".join(f"""***`{name:<15}`***| {'*' + str(gif_count):>3}*""" for name, gif_count in actions)
+        gif_sum = sum(gif_count for _, gif_count in actions)
+        des += f"""\n`-------------------`\n**__`Total         | {gif_sum}`__**"""
+        embed_var = Embed(title="**__Action | Count__**", description=des)
+        await ctx.reply(embed=embed_var)
+
 
     # eldritch
     # flirt

@@ -7,6 +7,8 @@ from discord.ext import commands
 
 from typing import Any
 
+from discord.ext.commands import Group
+
 
 class HelpCogDropdownWrapper(discord.ui.View):
     def __init__(
@@ -84,9 +86,6 @@ class MyHelpCommand(commands.MinimalHelpCommand, discord.ui.Select):
     def __init__(self, **options: Any) -> None:
         super().__init__(**options)
 
-    def __init__(self, **options: Any) -> None:
-        super().__init__(**options)
-
     async def send_bot_help(self, mapping: Mapping[commands.Cog | None, list[commands.Command[Any, ..., Any]]],
                             /) -> None:
         view = HelpCogDropdownWrapper(self.context.author, self.context.clean_prefix, self.invoked_with, mapping)
@@ -129,6 +128,20 @@ class MyHelpCommand(commands.MinimalHelpCommand, discord.ui.Select):
         channel = self.get_destination()
         await channel.send(embed=embed)
 
+    async def send_group_help(self, group: Group[Any, ..., Any], /) -> None:
+        """group specific help"""
+        embed = discord.Embed(title=f"{group.qualified_name}", colour=0xa80000)
+        embed.add_field(name="Help", value=group.short_doc)
+        alias = group.aliases
+        if alias:
+            embed.add_field(name="Aliases", value=", ".join(alias), inline=False)
+
+        for command in group.commands:
+            embed.add_field(name=f"{self.context.clean_prefix}{command.name}", value=f"{command.short_doc}",
+                            inline=False)
+
+        channel = self.get_destination()
+        await channel.send(embed=embed)
 
 class Assistance(commands.Cog):
     def __init__(self, client):

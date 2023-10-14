@@ -1,11 +1,15 @@
 # cogs / actions.py
 
-import csv
 import random
+import traceback
+from typing import Any
+
+from utils import pagination
 
 import discord
 from discord import Embed
 from discord.ext import commands
+
 
 
 class Actions(commands.Cog):
@@ -13,17 +17,14 @@ class Actions(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    # friends = [
-    #     158646501696864256,
-    #     689522335119966258,
-    #     453534487343792130,
-    #     444564239911354368,
-    #     702162355844284489,
-    #     372667623269335042
-    # ]
+    async def cog_command_error(self, ctx, error: Exception) -> None:
+        traceback.print_exception(error)
+        if ctx.guild.id == 1039953198359781446:
+            error = getattr(error, "original", error)
+            await ctx.send(embed=Embed(title=f"{type(error).__name__}", description=f"{error}", colour=0xC70039))
 
     hugging_table = "hug_cog"
-
+    action_list = ("gay", "wave", "broke", "google")
     async def get_hugged(self, action):
         async with self.client.db_pool.acquire() as conn:
             async with conn.cursor() as cur:
@@ -32,6 +33,27 @@ class Actions(commands.Cog):
                 # print(cur.description)
                 result = await cur.fetchone()
                 return result
+
+    async def check_gif(self, hug, gif):
+        async with self.client.db_pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    f"SELECT * FROM `{self.hugging_table}` where category_name='{hug}' and image_url='{gif}'")
+                result = await cur.fetchall()
+                return result
+
+    async def action_count(self, where: bool):
+        async with self.client.db_pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                if where:
+                    where_q = f"WHERE category_name IN {self.action_list}"
+                else:
+                    where_q = ""
+                await cur.execute(f"SELECT category_name, COUNT(*) AS `num` FROM hug_cog {where_q} GROUP BY category_name ORDER BY category_name")
+                result = await cur.fetchall()
+                return result
+
+
 
 
     # UwU time
@@ -48,7 +70,7 @@ class Actions(commands.Cog):
                                "<a:pleadingpoint:1089415562158952540>", "<:isforme:1089417637915791390>"])
 
         await ctx.reply(
-             "OwO " +
+             "OwO " + # ToDo convert to tuples
             message
             .replace("u", "uwu")
             .replace("o", "owo")
@@ -164,6 +186,7 @@ class Actions(commands.Cog):
 
         await ctx.reply(embed=embed_var)
 
+
     @commands.hybrid_command()
     async def quotation(self, ctx, user: discord.User, *, message: str):
         """Post a fake quote from someone else"""
@@ -172,6 +195,26 @@ class Actions(commands.Cog):
         embed_var.set_author(name=author.display_name, icon_url=author.display_avatar)
         await ctx.reply(embed=embed_var)
 
+
+    @commands.hybrid_command()
+    async def action_gifs(self, ctx):
+        """get all gifs used in this cog"""
+        actions = await self.action_count(True)
+        des = "\n".join(f"""***`{name:<15}`***| {'*' + str(gif_count):>3}*""" for name, gif_count in actions)
+        gif_sum = sum(gif_count for _, gif_count in actions)
+        des += f"""\n`-------------------`\n**__`Total         | {gif_sum}`__**"""
+        embed_var = Embed(title="**__Action | Count__**", description=des)
+        await ctx.reply(embed=embed_var)
+
+    @commands.hybrid_command()
+    async def all_gifs(self, ctx):
+        """get all non wrestler gifs"""
+        actions = await self.action_count(False)
+        des = "\n".join(f"""***`{name:<15}`***| {'*' + str(gif_count):>3}*""" for name, gif_count in actions)
+        gif_sum = sum(gif_count for _, gif_count in actions)
+        des += f"""\n`-------------------`\n**__`Total         | {gif_sum}`__**"""
+        embed_var = Embed(title="**__Action | Count__**", description=des)
+        await ctx.reply(embed=embed_var)
 
 async def setup(client):
     await client.add_cog(Actions(client))

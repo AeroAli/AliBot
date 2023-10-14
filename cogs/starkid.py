@@ -1,6 +1,7 @@
 # cogs / starkid.py
 import json
 import random
+import traceback
 from os import listdir
 from os.path import isfile, join
 
@@ -68,7 +69,7 @@ class Starkid(commands.Cog):
                     embed_var.set_image(url=gif)
                     await ctx.reply(embed=embed_var)
         except Exception as e:
-            print(e)
+            traceback.print_exception(e)
             await ctx.reply("Source Not Available")
 
     @commands.hybrid_command()
@@ -126,7 +127,7 @@ class Starkid(commands.Cog):
                     await ctx.reply(embed=embed_var)
             # await ctx.reply(gif)
         except Exception as e:
-            print(e)
+            traceback.print_exception(e)
             await ctx.reply("Source Not Available")
 
     @commands.hybrid_command()
@@ -159,7 +160,7 @@ class Starkid(commands.Cog):
                 embed_var.set_image(url=gif)
                 await ctx.reply(embed=embed_var)
         except Exception as e:
-            print(e)
+            traceback.print_exception(e)
             await ctx.reply("Source Not Available")
 
     @commands.hybrid_command()
@@ -196,11 +197,11 @@ class Starkid(commands.Cog):
                         author = await self.client.fetch_user(ran["author"])
                         embed_var.set_author(name=author, icon_url=author.avatar.url)
                     except Exception as e:
-                        print(e)
+                        traceback.print_exception(e)
                     await ctx.reply(embed=embed_var)
                     print(gif, quote)
             except Exception as e:
-                print(e)
+                traceback.print_exception(e)
                 await ctx.reply("Source Not Available")
 
     @commands.hybrid_command()

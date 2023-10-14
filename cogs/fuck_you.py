@@ -1,6 +1,7 @@
 # cogs / fuck_you.py
 
 import random
+import traceback
 
 from discord import Embed
 from discord.ext import commands
@@ -30,7 +31,7 @@ class Fuck_U(commands.Cog):
                 await ctx.send(embed=embed_var)
                 print(gif, quote)
             except Exception as e:
-                print(e)
+                traceback.print_exception(e)
                 await ctx.reply("Source Not Available")
 
 

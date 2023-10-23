@@ -4,6 +4,7 @@ cogs/exp*.py
 test_json/*
 cogs/treehouse.py
 cogs/moderation.py
+cogs/youtube.py
 
 /mp4s/
 /utils/acvr_text.md

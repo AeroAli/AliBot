@@ -14,12 +14,11 @@ import discord
 import wavelink
 from discord import app_commands
 from discord.ext import commands
-from wavelink.ext import spotify
 
-
-from utils.wave import SkippablePlayer
+from utils.wave import AnyTrack, AnyTrackIterable, SkippablePlayer
 from utils import checks
 from utils.music_utils import MusicQueueView, WavelinkSearchConverter, format_track_embed, generate_tracks_add_notification
+
 
 
 LOGGER = logging.getLogger(__name__)
@@ -42,7 +41,10 @@ config_dict = {
         "uri": ll_uri
     }
 }
-
+"""
+music.py: This cog provides functionality for playing tracks in voice channels given search terms or urls, implemented
+with Wavelink.
+"""
 
 
 class MusicCog(commands.Cog, name="Music"):
@@ -57,15 +59,7 @@ class MusicCog(commands.Cog, name="Music"):
 
         return discord.PartialEmoji(name="\N{MUSICAL NOTE}")
 
-    async def cog_load(self) -> None:
-        """Create and connect to the Lavalink node(s)."""
-
-        sc = spotify.SpotifyClient(**config_dict["spotify"])
-        node = wavelink.Node(**config_dict["lavalink"])
-
-        await wavelink.NodePool.connect(client=self.client, nodes=[node], spotify=sc)
-
-    async def cog_command_error(self, ctx, error: Exception) -> None:  # type: ignore # Narrowing
+    async def cog_command_error(self, ctx: checks.Context, error: Exception) -> None:  # type: ignore # Narrowing
         """Catch errors from commands inside this cog."""
 
         embed = discord.Embed(title="Music Error", description="Something went wrong with this command.")
@@ -77,8 +71,8 @@ class MusicCog(commands.Cog, name="Music"):
 
         if isinstance(error, commands.MissingPermissions):
             embed.description = "You don't have permission to do this."
-        elif isinstance(error, checks.NotInBotVoiceChannel):
-            embed.description = "You're not in the same voice channel as the bot."
+        elif isinstance(error, error.NotInclientVoiceChannel):
+            embed.description = "You're not in the same voice channel as the client."
         elif isinstance(error, app_commands.TransformerError):
             if err := error.__cause__:
                 embed.description = err.args[0]
@@ -91,7 +85,10 @@ class MusicCog(commands.Cog, name="Music"):
 
     @commands.Cog.listener()
     async def on_wavelink_node_ready(self, node: wavelink.Node) -> None:
-        """Called when the Node you are connecting to has initialised and successfully connected to Lavalink."""
+        """Called when the Node you are connecting to has initialised and successfully connected to Lavalink.
+
+        Note: If this cog is reloaded, this will not trigger. Duh.
+        """
 
         LOGGER.info("Wavelink node %s is ready!", node.id)
 
@@ -103,19 +100,32 @@ class MusicCog(commands.Cog, name="Music"):
         LOGGER.info("Wavelink websocket closed: %s - %s - %s - %s", *payload_tuple)
 
     @commands.Cog.listener()
+    async def on_wavelink_track_start(self, payload: wavelink.TrackEventPayload) -> None:
+        """Called when a track starts playing.
+
+        Sends a notification about the new track to the voice channel.
+        """
+
+        if payload.original:
+            current_embed = await format_track_embed("Now Playing", payload.original)
+            if payload.player.channel:
+                await payload.player.channel.send(embed=current_embed)
+
+    @commands.Cog.listener()
     async def on_wavelink_track_end(self, payload: wavelink.TrackEventPayload) -> None:
-        """Called when the current track has finished playing."""
+        """Called when the current track has finished playing.
+
+        Attempts to play the next track if available.
+        """
 
         player = payload.player
-        assert isinstance(player, SkippablePlayer)  # Known due to personal bot setup.
 
-        if player.is_connected() and not player.queue.is_empty:
-            new_track = await player.queue.get_wait()
-            await player.play(new_track)
-
-            current_embed = await format_track_embed(discord.Embed(color=0x149CDF, title="Now Playing"), new_track)
-            if player.channel:
-                await player.channel.send(embed=current_embed)
+        if player.is_connected():
+            if player.queue.loop or player.queue.loop_all:
+                next_track = player.queue.get()
+            else:
+                next_track = await player.queue.get_wait()
+            await player.play(next_track)
         else:
             await player.stop()
 
@@ -135,7 +145,7 @@ class MusicCog(commands.Cog, name="Music"):
         if vc is not None and ctx.author.voice is not None:
             if vc.channel != ctx.author.voice.channel:
                 if ctx.author.guild_permissions.administrator:
-                    await vc.move_to(ctx.author.voice.channel)  # type: ignore
+                    await vc.move_to(ctx.author.voice.channel)  # type: ignore # Valid channel to move to.
                     await ctx.send(f"Joined the {ctx.author.voice.channel} channel.")
                 else:
                     await ctx.send("Voice player is currently being used in another channel.")
@@ -146,7 +156,7 @@ class MusicCog(commands.Cog, name="Music"):
         else:
             # Not sure in what circumstances a member would have a voice state without being in a valid channel.
             assert ctx.author.voice.channel
-            await ctx.author.voice.channel.connect(cls=SkippablePlayer)
+            await ctx.author.voice.channel.connect(cls=SkippablePlayer)  # type: ignore # Valid VoiceProtocol subclass.
             await ctx.send(f"Joined the {ctx.author.voice.channel} channel.")
 
     @music.command()
@@ -154,15 +164,15 @@ class MusicCog(commands.Cog, name="Music"):
         self,
         ctx,
         *,
-        search: app_commands.Transform[str, WavelinkSearchConverter],
+        search: app_commands.Transform[AnyTrack | AnyTrackIterable, WavelinkSearchConverter],
     ) -> None:
         """Play audio from a YouTube url or search term.
 
         Parameters
         ----------
-        ctx : :class:`checks.GuildContext`
+        ctx: :class:`checks.GuildContext`
             The invocation context.
-        search : :class:`str`
+        search: :class:`str`
             A url or search query.
         """
 
@@ -170,16 +180,13 @@ class MusicCog(commands.Cog, name="Music"):
         vc: SkippablePlayer = ctx.voice_client
 
         async with ctx.typing():
-            await vc.queue.put_all_wait(search, ctx.author.mention)  # type: ignore # Idk
-            notif_text = await generate_tracks_add_notification(search)  # type: ignore # Idk
+            await vc.queue.put_all_wait(search, ctx.author.mention)
+            notif_text = await generate_tracks_add_notification(search)
             await ctx.send(notif_text)
 
             if not vc.is_playing():
                 first_track = vc.queue.get()
                 await vc.play(first_track)
-
-                embed = await format_track_embed(discord.Embed(color=0x149CDF, title="Now Playing"), first_track)
-                await ctx.send(embed=embed)
 
     @music.command()
     @checks.in_bot_vc()
@@ -211,7 +218,7 @@ class MusicCog(commands.Cog, name="Music"):
     @music.command(aliases=["disconnect"])
     @checks.in_bot_vc()
     async def stop(self, ctx) -> None:
-        """Stop playback and disconnect the bot from voice."""
+        """Stop playback and disconnect the client from voice."""
 
         if vc := ctx.voice_client:
             await vc.disconnect()  # type: ignore # Incomplete wavelink typing
@@ -226,7 +233,7 @@ class MusicCog(commands.Cog, name="Music"):
         vc: SkippablePlayer | None = ctx.voice_client
 
         if vc and vc.current:
-            current_embed = await format_track_embed(discord.Embed(color=0x149CDF, title="Now Playing"), vc.current)
+            current_embed = await format_track_embed("Now Playing", vc.current)
         else:
             current_embed = discord.Embed(
                 color=0x149CDF,
@@ -248,11 +255,11 @@ class MusicCog(commands.Cog, name="Music"):
         queue_embeds: list[discord.Embed] = []
         if vc:
             if vc.current:
-                current_embed = await format_track_embed(discord.Embed(color=0x149CDF, title="Now Playing"), vc.current)
+                current_embed = await format_track_embed("Now Playing", vc.current)
                 queue_embeds.append(current_embed)
 
-            view = MusicQueueView(author=ctx.author, all_pages_content=[track.title for track in vc.queue], per_page=10)
-            queue_embeds.append(view.get_starting_embed())
+            view = MusicQueueView(ctx.author.id, [track.title for track in vc.queue], 10)
+            queue_embeds.append(await view.get_first_page())
             message = await ctx.send(embeds=queue_embeds, view=view)
             view.message = message
 
@@ -263,9 +270,9 @@ class MusicCog(commands.Cog, name="Music"):
 
         Parameters
         ----------
-        ctx : :class:`checks.GuildContext`
+        ctx: :class:`checks.GuildContext`
             The invocation context.
-        entry : :class:`int`
+        entry: :class:`int`
             The track's position.
         """
 
@@ -299,11 +306,11 @@ class MusicCog(commands.Cog, name="Music"):
 
         Parameters
         ----------
-        ctx : :class:`checks.GuildContext`
+        ctx: :class:`checks.GuildContext`
             The invocation context.
-        before : :class:`int`
+        before: :class:`int`
             The index of the song you want moved.
-        after : :class:`int`
+        after: :class:`int`
             The index you want to move it to.
         """
 
@@ -329,7 +336,7 @@ class MusicCog(commands.Cog, name="Music"):
         ----------
         ctx: :class:`checks.GuildContext`
             The invocation context.
-        index : :class:`int`
+        index: :class:`int`
             The place in the queue to skip to.
         """
 
@@ -368,9 +375,9 @@ class MusicCog(commands.Cog, name="Music"):
 
         Parameters
         ----------
-        ctx : :class:`checks.GuildContext`
+        ctx: :class:`checks.GuildContext`
             The invocation context.
-        loop : Literal["All Tracks", "Current Track", "Off"]
+        loop: Literal["All Tracks", "Current Track", "Off"]
             The loop settings. "All Tracks" loops everything in the queue, "Current Track" loops the playing track, and
             "Off" resets all looping.
         """
@@ -395,9 +402,9 @@ class MusicCog(commands.Cog, name="Music"):
 
         Parameters
         ----------
-        ctx : :class:`checks.GuildContext`
+        ctx: :class:`checks.GuildContext`
             The invocation context.
-        position : :class:`str`
+        position: :class:`str`
             The time to jump to, given in the format `hours:minutes:seconds` or `minutes:seconds`.
         """
 
@@ -430,9 +437,9 @@ class MusicCog(commands.Cog, name="Music"):
 
         Parameters
         ----------
-        ctx : :class:`checks.GuildContext`
+        ctx: :class:`checks.GuildContext`
             The invocation context.
-        volume : :class:`int`, optional
+        volume: :class:`int`, optional
             The volume to change to, with a maximum of 1000.
         """
 
@@ -452,15 +459,14 @@ class MusicCog(commands.Cog, name="Music"):
         vc: SkippablePlayer | None = ctx.voice_client
 
         if vc is None:
-            if ctx.author.voice:
+            if user_voice := ctx.author.voice:
                 # Not sure in what circumstances a member would have a voice state without being in a valid channel.
-                assert ctx.author.voice.channel
-                await ctx.author.voice.channel.connect(cls=SkippablePlayer)
+                assert user_voice.channel
+                await user_voice.channel.connect(cls=SkippablePlayer)  # type: ignore # Valid VoiceProtocol subclass.
             else:
                 await ctx.send("You are not connected to a voice channel.")
-                msg = "Author not connected to a voice channel."
+                msg = "User not connected to a voice channel."
                 raise commands.CommandError(msg)
-
 
 async def setup(client):
     await client.add_cog(MusicCog(client))

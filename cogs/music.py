@@ -12,6 +12,7 @@ from typing import Literal
 
 import discord
 import wavelink
+from wavelink.ext import spotify
 from discord import app_commands
 from discord.ext import commands
 
@@ -41,10 +42,6 @@ config_dict = {
         "uri": ll_uri
     }
 }
-"""
-music.py: This cog provides functionality for playing tracks in voice channels given search terms or urls, implemented
-with Wavelink.
-"""
 
 
 class MusicCog(commands.Cog, name="Music"):
@@ -52,6 +49,16 @@ class MusicCog(commands.Cog, name="Music"):
 
     def __init__(self, client) -> None:
         self.client = client
+
+
+    async def cog_load(self) -> None:
+        """Create and connect to the Lavalink node(s)."""
+
+        sc = spotify.SpotifyClient(**config_dict["spotify"])
+        node = wavelink.Node(**config_dict["lavalink"])
+
+        await wavelink.NodePool.connect(client=self.client, nodes=[node], spotify=sc)
+
 
     @property
     def cog_emoji(self) -> discord.PartialEmoji:

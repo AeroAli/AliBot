@@ -102,7 +102,7 @@ class BotStatsCog(commands.Cog, name="Bot Stats"):
 
 
     @commands.Cog.listener("on_interaction")
-    async def track_interaction(self, ctx, interaction) -> None:
+    async def track_interaction(self, interaction) -> None:
         """Record application command usage, ignoring hybrid or other interactions.
 
         References
@@ -115,8 +115,8 @@ class BotStatsCog(commands.Cog, name="Bot Stats"):
                 interaction.type is discord.InteractionType.application_command and
                 not isinstance(interaction.command, commands.hybrid.HybridAppCommand)
         ):
-            ctx.command_failed = interaction.command_failed
-            await self.track_command_use(ctx)
+            interaction.command_failed = interaction.command_failed
+            await self.track_command_use(interaction)
 
     @commands.Cog.listener("on_command_error")
     async def track_command_error(self, ctx, error: commands.CommandError) -> None:

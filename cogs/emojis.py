@@ -9,14 +9,16 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
+import traceback
+
 import unicodedata
 from typing import TYPE_CHECKING, Any
 
 import discord
-from discord import app_commands
+from discord import app_commands, Embed
 from discord.ext import commands
 
-
+import utils.errors
 from utils.ai import get_image, process_image
 
 
@@ -223,6 +225,36 @@ async def context_menu_sticker_add(interaction, message: discord.Message) -> Non
     else:
         await interaction.response.send_message("No stickers in this message.", ephemeral=True)
 
+@context_menu_sticker_add.error
+@context_menu_emoji_add.error
+async def on_context_menu_error(interaction, exception):
+    error = getattr(exception, "original", exception)
+    time = discord.utils.utcnow()
+    embed_var = (
+        Embed(title=f"Command: {interaction.command} Failure", description=f"**{type(error).__name__}**```{error}```",
+              colour=0xC70039, timestamp=time)
+        .add_field(name="Server", value=f"{interaction.guild.name}", inline=True)
+        .add_field(name="​", value="​", inline=True)
+        .add_field(name="Channel", value=f"{interaction.channel.name}", inline=True)
+        .set_author(name=interaction.author, icon_url=interaction.author.avatar.url)
+    )
+
+    if interaction.namespace:
+        embed_var.add_field(
+            name="Kwargs",
+            value="```py\n" + "\n".join(f"{name}: {kwarg!r}" for name, kwarg in iter(interaction.namespace)) + "\n```",
+            inline=False,
+        )
+    await interaction.client.error_webhook.send(embed=embed_var)
+    if isinstance(exception, utils.errors.BadRole):
+        await interaction.send(str(exception.args[0]))
+        return
+    if isinstance(exception, utils.errors.BabbyProofing):
+        embed_var = discord.Embed(title="You're on timeout")
+        embed_var.set_image(url="https://media.tenor.com/e_9c6yedKCQAAAAd/cat-kitten.gif")
+        await interaction.reply(embed=embed_var)
+        return
+    traceback.print_exception(exception)
 
 class EmojiOpsCog(commands.Cog, name="Emoji Operations"):
     """A cog with commands for performing actions with emojis and stickers."""
@@ -405,7 +437,7 @@ class EmojiOpsCog(commands.Cog, name="Emoji Operations"):
                     return
 
                 # Attempt to read the input as an image url.
-                emoji_bytes = await get_image(ctx.session, entity)
+                emoji_bytes = await get_image(self.client.web_client, entity)
             else:
                 # Attempt to convert and read the input as an emoji normally.
                 emoji_bytes = await converted_emoji.read()
@@ -448,7 +480,7 @@ class EmojiOpsCog(commands.Cog, name="Emoji Operations"):
             conv_sticker = await commands.GuildStickerConverter().convert(ctx, sticker)
         except commands.GuildStickerNotFound:
             try:
-                conv_sticker = await self.bot.fetch_sticker(int(sticker))
+                conv_sticker = await self.client.fetch_sticker(int(sticker))
             except (ValueError, discord.HTTPException, discord.NotFound):
                 embed = discord.Embed(title="Error", description="That is not a valid sticker name or ID, sorry!")
                 await ctx.send(embed=embed)
@@ -466,7 +498,7 @@ class EmojiOpsCog(commands.Cog, name="Emoji Operations"):
 
         if isinstance(conv_sticker, discord.GuildSticker):
             try:
-                guild = conv_sticker.guild or await self.bot.fetch_guild(conv_sticker.guild_id)
+                guild = conv_sticker.guild or await self.client.fetch_guild(conv_sticker.guild_id)
             except (discord.Forbidden, discord.HTTPException):
                 guild = None
 

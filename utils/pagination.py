@@ -33,7 +33,7 @@ class QuitButton(discord.ui.Button[discord.ui.View]):
     Default label is an X symbol, and default style is red.
     """
 
-    def __init__(**kwargs: Any):
+    def __init__(self, **kwargs: Any):
         kwargs["style"] = kwargs.get("style", discord.ButtonStyle.red)
         kwargs["label"] = kwargs.get("label", "\N{MULTIPLICATION X}")
         super().__init__(**kwargs)

@@ -1,5 +1,6 @@
 # main.py
 import asyncio
+import sys
 import traceback
 from os import getenv, listdir
 from os.path import abspath, dirname
@@ -22,6 +23,7 @@ db_port = getenv("DB_PORT")
 db = getenv("DB")
 er_wh = getenv("ER_WEBHOOK")
 vc_wh = getenv("EVENT_WEBHOOK")
+mes_wh = getenv("MESSAGE_WEBHOOK")
 
 
 class Client(commands.Bot):
@@ -35,6 +37,7 @@ class Client(commands.Bot):
         self.web_client = web_client
         self.error_webhook = discord.Webhook.from_url(url=er_wh, session=self.web_client, client=self)
         self.event_webhook = discord.Webhook.from_url(url=vc_wh, session=self.web_client, client=self)
+        self.message_webhook = discord.Webhook.from_url(url=mes_wh, session=self.web_client, client=self)
 
     async def setup_hook(self):  # overwriting a handler
         print(f"\033[31mLogged in as {self.user}\033[39m")
@@ -45,24 +48,35 @@ class Client(commands.Bot):
         await self.tree.sync()
         print("Loaded cogs")
 
-    async def on_command_error(self, context, exception, /) -> None:
-
+    async def on_command_error(self, context, exception, /, *args: object, **kwargs: object) -> None:
         # print(self.error_webhook)
         # channel = self.get_channel(1156653571522174987)
         error = getattr(exception, "original", exception)
         time = discord.utils.utcnow()
         embed_var = (
-            Embed(title=f"Command: {context.command} Failure", description=f"**{type(error).__name__}**```{error}```", colour=0xC70039)
-            .add_field(name="Date",value=f"{discord.utils.format_dt(time)}", inline=True)
-            .add_field(name="Parameters", value=f"{', '.join(context.args)}, {', '.join(f'{key}: {value}' for key, value in context.kwargs.items())}", inline=True)
-            .add_field(name="​",value="​",inline=True)
+            Embed(title=f"Command: {context.command} Failure", description=f"**{type(error).__name__}**```{error}```", colour=0xC70039, timestamp=time)
             .add_field(name="Server", value=f"{context.guild.name}", inline=True)
-            .add_field(name="Channel",value=f"{context.channel.name}", inline=True)
-            .add_field(name="​",value="​",inline=True)
+            .add_field(name="​", value="​", inline=True)
+            .add_field(name="Channel", value=f"{context.channel.name}", inline=True)
             .set_author(name=context.author, icon_url=context.author.avatar.url)
         )
+        if args:
+            embed_var.add_field(
+                name="Args",
+                value="```py\n" + "\n".join(f"{i}: {arg!r}" for i, arg in enumerate(args)) + "\n```",
+                inline=False,
+            )
+        if kwargs:
+            embed_var.add_field(
+                name="Kwargs",
+                value="```py\n" + "\n".join(f"{name}: {kwarg!r}" for name, kwarg in kwargs.items()) + "\n```",
+                inline=False,
+            )
         await self.error_webhook.send(embed=embed_var)
         if isinstance(exception, utils.errors.BadRole):
+            await context.send(str(exception.args[0]))
+            return
+        if isinstance(exception, utils.errors.UserIsBlocked):
             await context.send(str(exception.args[0]))
             return
         if isinstance(exception, utils.errors.BabbyProofing):
@@ -73,7 +87,29 @@ class Client(commands.Bot):
         traceback.print_exception(exception)
 
 
-
+    async def on_error(self, event_method: str, /, *args: object, **kwargs: object) -> None:
+        exc_type, exception, tb = sys.exc_info()
+        tb_text = "".join(traceback.format_exception(exc_type, exception, tb, chain=False))
+        embed_var = discord.Embed(
+            title="Event Error",
+            description=f"```py\n{tb_text}\n```",
+            colour=discord.Colour.dark_gold(),
+            timestamp=discord.utils.utcnow(),
+        ).add_field(name="Event", value=event_method, inline=False)
+        if args:
+            embed_var.add_field(
+                name="Args",
+                value="```py\n" + "\n".join(f"{i}: {arg!r}" for i, arg in enumerate(args)) + "\n```",
+                inline=False,
+            )
+        if kwargs:
+            embed_var.add_field(
+                name="Kwargs",
+                value="```py\n" + "\n".join(f"{name}: {kwarg!r}" for name, kwarg in kwargs.items()) + "\n```",
+                inline=False,
+            )
+        await self.error_webhook.send(embed=embed_var)
+        traceback.print_exception(exception)
 
     async def execute_query(self, query: str, values: list):
         try:
@@ -108,6 +144,7 @@ class Client(commands.Bot):
         if updates:
             up_s = ", ".join(f"{u}=%s" for u in updates)
             insert_query += f"""on duplicate key update {up_s}"""
+        print(f"{insert_query!r}")
         await self.execute_query(insert_query, values)
 
 

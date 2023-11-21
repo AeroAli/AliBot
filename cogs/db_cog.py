@@ -13,6 +13,7 @@ class DB_Cog(commands.Cog):
     def __init__(self, client):
         self.hugging_table = "wrestling_cog"
         self.wrestling_table = "hug_cog"
+        self.user_table = "user_table"
         self.client = client
 
     async def cog_check(self, ctx) -> bool:
@@ -85,32 +86,37 @@ class DB_Cog(commands.Cog):
     @app_commands.guilds(1039953198359781446)
     @commands.hybrid_command()
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def update_user_db(self, ctx, user_id, user_name, is_babby=0, allowed=1):
+    async def update_user_db(self, ctx, user_id, user_name: str, is_babby: int=0, allowed: int=1):
         # insert_query = """
         # Insert into user_table (user_id, user_name, is_babby, allowed)
         # VALUES (%s, %s, %s, %s) 
         # on duplicate key update is_babby=%s, allowed=%s
         # """
-        col = ("user_id", "user_name", "is_babby", "allowed")
-        values = [user_id, user_name, is_babby, allowed, is_babby, allowed]
-        await self.client.insert_command("user_table", col, values, [is_babby, allowed])
+        try:
+            col = ("user_id", "user_name", "is_babby", "allowed")
+            values = [user_id, user_name, is_babby, allowed, is_babby, allowed]
+            await self.client.insert_command("user_table", col, values, [is_babby, allowed])
 
-        embed_var = Embed(description="Updated `guild_table`")
+            embed_var = Embed(description="Updated `guild_table`")
+            await ctx.reply(embed=embed_var)
 
-        await ctx.reply(embed=embed_var)
+        except Exception as E:
+            await ctx.send(embed=Embed(title=f"Error", description=f"{E}", colour=0xC70039))
+
 
 
     @commands.hybrid_command()
     @app_commands.guilds(1039953198359781446)
     async def user_status(self, ctx):
         results = await self.user_statuses()
-        embed_var = Embed(title="**__User Status__**")
-        embed_var.description(
-            "\n".join(f"<@{int(user)}> | {'Baby' if bool(baby) else 'Adult'} | {'Banned' if bool(allowed) else 'Free'}"
-                      for _, user, baby, allowed, _ in results))
-
-        # embed_var.description = str(results)
-        await ctx.reply(embed=embed_var)
+        embed_var = Embed(title="**__User Status__**",
+                          description="\n".join(f"<@{int(user)}> | {'Baby' if bool(baby) else 'Adult'} | {'Banned' if not bool(allowed) else 'Free'}"
+                      for _, user, baby, allowed, _ in results)
+        )
+        try:
+            await ctx.reply(embed=embed_var)
+        except Exception as E:
+            await ctx.send(embed=Embed(title=f"Error", description=f"{E}", colour=0xC70039))
 
 
     @commands.hybrid_command()
